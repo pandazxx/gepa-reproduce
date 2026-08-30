@@ -29,6 +29,8 @@ The target setup is **Ollama + `qwen3.5:9b`** running locally. Honest caveats:
 
 ## Quickstart
 
+If you have Nix with flakes enabled, `nix develop` drops you into a shell with Python 3.11, `uv`, `just`, `ollama`, `curl`, and `git` already on `PATH` — skip straight to `just setup`.
+
 With [just](https://github.com/casey/just) (see the `justfile` for all shortcuts):
 
 ```bash
