@@ -1,0 +1,14 @@
+[project]
+name = "gepa-reproduce"
+version = "0.1.0"
+description = "Laptop-scale reproduction of the GEPA paper (arXiv:2507.19457)"
+requires-python = ">=3.11"
+dependencies = [
+    "gepa[full]",
+    "dspy",
+    "datasets",
+    "litellm",
+]
+
+[tool.setuptools]
+packages = ["experiments", "experiments.aime"]
