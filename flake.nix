@@ -27,14 +27,6 @@
             ];
 
             shellHook = ''
-              if [ -f .env ]; then
-                set -a
-                . ./.env
-                set +a
-                echo "Loaded environment variables from .env"
-              else
-                echo "No .env found — copy .env.example to .env to set OLLAMA_API_BASE / OPENAI_API_KEY"
-              fi
               echo "gepa-reproduce devshell ready: $(python3 --version), $(just --version), ollama $(ollama --version 2>/dev/null | head -n1)"
               echo "Next: just setup && just pull && just serve (separate terminal) && just preflight"
             '';
