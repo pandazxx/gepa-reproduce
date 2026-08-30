@@ -29,6 +29,22 @@ The target setup is **Ollama + `qwen3.5:9b`** running locally. Honest caveats:
 
 ## Quickstart
 
+With [just](https://github.com/casey/just) (see the `justfile` for all shortcuts):
+
+```bash
+just setup       # venv + deps (uv)
+just pull        # ollama pull qwen3.5:9b
+just serve       # ollama serve with OLLAMA_CONTEXT_LENGTH=16384 (separate terminal)
+just preflight   # checks Ollama, model, context window, datasets
+just smoke       # validate the pipeline in ~minutes (tiny splits, budget 30)
+just run         # real run, budget 300 (overnight); just run 600 for a bigger budget
+just results     # show scores + the best evolved prompt
+```
+
+Other shortcuts: `just baseline` (seed prompt on the test set only), `just run-hybrid` (local rollouts + `gpt-4.1-mini` reflection; needs `OPENAI_API_KEY`), `just clean`. Override the model inline: `just model=<ollama-tag> smoke`.
+
+Or the same steps by hand:
+
 ```bash
 # 1. Ollama setup (once)
 ollama pull qwen3.5:9b
