@@ -19,6 +19,12 @@ import dspy
 from experiments.aime.utils import evaluate_on_dataset, load_math_dataset, math_metric, run_llm
 from gepa.optimize_anything import EngineConfig, GEPAConfig, ReflectionConfig, SideInfo, optimize_anything
 
+# litellm's default request timeout (600s) is tuned for hosted APIs; a quantized
+# model on a laptop CPU/GPU can take longer per rollout, especially with a long
+# reflection prompt. Both the task LM and reflection LM forward this to
+# litellm.completion(timeout=...).
+DEFAULT_TIMEOUT_S = 1800
+
 INITIAL_PROMPT = (
     "Solve the math problem carefully. Break down the steps and provide the final answer as a single number."
 )
@@ -46,6 +52,13 @@ def main():
     parser.add_argument("--workers", type=int, default=2, help="Parallel evals; match OLLAMA_NUM_PARALLEL")
     parser.add_argument("--max-tokens", type=int, default=16000)
     parser.add_argument("--temperature", type=float, default=0.6, help="Paper's Qwen3 setting (App. E.2)")
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=DEFAULT_TIMEOUT_S,
+        help="Per-request LM timeout in seconds, forwarded to litellm (default: %(default)s). "
+        "Raise this if slow local inference trips litellm.Timeout.",
+    )
     parser.add_argument("--run-dir", default="outputs/aime")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--smoke", action="store_true", help="Tiny splits + budget 30 to validate the pipeline")
@@ -62,6 +75,7 @@ def main():
         temperature=args.temperature,
         top_p=0.95,
         max_tokens=args.max_tokens,
+        timeout=args.timeout,
     )
     dspy.configure(lm=solver_lm)
 
@@ -99,6 +113,7 @@ def main():
         ),
         reflection=ReflectionConfig(
             reflection_lm=args.reflection_model,
+            reflection_lm_kwargs={"timeout": args.timeout},
         ),
     )
 

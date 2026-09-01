@@ -29,6 +29,8 @@ The target setup is **Ollama + `qwen3.5:9b`** running locally. Honest caveats:
 
 ## Quickstart
 
+If you have Nix with flakes enabled, `nix develop` drops you into a shell with Python 3.11, `uv`, `just`, `ollama`, `curl`, and `git` already on `PATH` — skip straight to `just setup`. If you also have [direnv](https://direnv.net/) hooked into your shell, `direnv allow` in the repo root does the same automatically and loads `.env` (copy it from `.env.example` first) via the `.envrc`'s `dotenv_if_exists`.
+
 With [just](https://github.com/casey/just) (see the `justfile` for all shortcuts):
 
 ```bash
@@ -72,6 +74,7 @@ Useful flags (`python -m experiments.aime.main --help`):
 - `--task-model` / `--reflection-model` — any LiteLLM string. Default: `ollama_chat/qwen3.5:9b` for both (self-reflection, like the paper's Qwen runs). If local reflections look weak, point only the reflection model at an API model (e.g. `--reflection-model openai/gpt-4.1-mini`) — the "cheap executor, strong reflector" configuration.
 - `--budget` — total metric calls (rollouts), the paper's Eq. 2 budget `B`.
 - `--workers` — parallel evaluations; match `OLLAMA_NUM_PARALLEL`.
+- `--timeout` — per-request LM timeout in seconds (default 1800). litellm's own default (600s) can be too short for a quantized model on CPU/GPU-constrained laptop hardware, especially for long reflection prompts; raise it further if you still see `litellm.Timeout`.
 - `--skip-baseline` — skip the pre-optimization test-set eval.
 
 ## Experiment design (matches the paper)

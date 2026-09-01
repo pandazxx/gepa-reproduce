@@ -28,19 +28,19 @@ preflight:
 
 # Validate the whole pipeline in minutes (tiny splits, budget 30)
 smoke:
-    python -m experiments.aime.main --smoke --task-model ollama_chat/{{model}} --reflection-model {{reflection}}
+    uv run python -m experiments.aime.main --smoke --task-model ollama_chat/{{model}} --reflection-model {{reflection}}
 
 # Baseline only: seed prompt on the AIME-2025 test set, no optimization
 baseline:
-    python -m experiments.aime.main --baseline-only --task-model ollama_chat/{{model}}
+    uv run python -m experiments.aime.main --baseline-only --task-model ollama_chat/{{model}}
 
 # Real run (overnight on a laptop). Usage: just run [budget]
 run budget="300":
-    python -m experiments.aime.main --budget {{budget}} --task-model ollama_chat/{{model}} --reflection-model {{reflection}}
+    uv run python -m experiments.aime.main --budget {{budget}} --task-model ollama_chat/{{model}} --reflection-model {{reflection}}
 
 # Local rollouts + API reflection model (cheap executor, strong reflector). Needs OPENAI_API_KEY.
 run-hybrid budget="300" reflector="openai/gpt-4.1-mini":
-    python -m experiments.aime.main --budget {{budget}} --task-model ollama_chat/{{model}} --reflection-model {{reflector}}
+    uv run python -m experiments.aime.main --budget {{budget}} --task-model ollama_chat/{{model}} --reflection-model {{reflector}}
 
 # Show scores and the best evolved prompt from the last run
 results:
