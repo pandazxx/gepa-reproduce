@@ -15,8 +15,9 @@ import os
 from pathlib import Path
 
 import dspy
+from dspy.utils.exceptions import AdapterParseError
 
-from experiments.aime.utils import evaluate_on_dataset, load_math_dataset, math_metric, run_llm
+from experiments.aime.utils import evaluate_on_dataset, load_math_dataset, math_metric, parse_failure_metric, run_llm
 from gepa.optimize_anything import EngineConfig, GEPAConfig, ReflectionConfig, SideInfo, optimize_anything
 
 # litellm's default request timeout (600s) is tuned for hosted APIs; a quantized
@@ -31,7 +32,21 @@ INITIAL_PROMPT = (
 
 
 def evaluate(candidate: str, example) -> tuple[float, SideInfo]:
-    prediction = run_llm(example, candidate)
+    # GEPA re-raises evaluator exceptions, so an unparseable rollout (thinking
+    # model burns the whole token budget on reasoning and never emits the answer
+    # fields) would otherwise kill the entire run. Score it 0 with feedback the
+    # reflection model can learn from instead.
+    try:
+        prediction = run_llm(example, candidate)
+    except AdapterParseError as error:
+        score, feedback = parse_failure_metric(example, error)
+        return score, {
+            "score": score,
+            "input": example.input,
+            "output": "",
+            "reasoning": "",
+            "execution_feedback": feedback,
+        }
     score, feedback = math_metric(example, prediction)
     side_info = {
         "score": score,

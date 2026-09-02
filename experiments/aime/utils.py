@@ -51,6 +51,24 @@ def math_metric(example, prediction):
     return score, feedback_text
 
 
+def parse_failure_metric(example, error: Exception):
+    """Score a rollout whose LM response couldn't be parsed into the output fields.
+
+    With a thinking model, the usual cause is reasoning consuming the whole
+    generation budget so the response is cut off before the answer fields. The
+    raw multi-thousand-token response stays out of the feedback — it would blow
+    up the reflection context; the short diagnosis below is the learning signal.
+    """
+    correct_answer = int(example.answer)
+    feedback_text = (
+        f"Your response produced no parseable final answer ({type(error).__name__}): the output "
+        "was cut off before the required answer field, which usually means the reasoning used up "
+        "the entire generation budget. Keep your reasoning concise enough to always leave room to "
+        f"state the final integer answer. The correct answer is '{correct_answer}'."
+    )
+    return 0.0, feedback_text
+
+
 def load_math_dataset(seed: int = 0):
     train_split = []
     test_split = []
@@ -74,10 +92,15 @@ def evaluate_on_dataset(prompt: str, dataset, num_threads: int = 4) -> float:
     def dspy_metric(example, prediction, trace=None):
         return math_metric(example, prediction)[0]
 
+    # failure_score/max_errors: a rollout that dies (e.g. AdapterParseError when
+    # reasoning exhausts the token budget) scores 0 instead of aborting the eval
+    # once dspy's default error cap (~10) is hit.
     evaluator = dspy.Evaluate(
         devset=dataset,
         metric=dspy_metric,
         num_threads=num_threads,
         display_progress=True,
+        failure_score=0.0,
+        max_errors=len(dataset),
     )
     return evaluator(predictor).score / 100.0
